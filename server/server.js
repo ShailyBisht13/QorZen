@@ -1,6 +1,5 @@
-import dotenv from "dotenv";
-dotenv.config();
-
+import "dotenv/config";
+console.log("Cloudinary key loaded:", process.env.CLOUDINARY_API_KEY ? "YES" : "NO");
 import connectDB from "./config/db.js";
 import app from "./app.js";
 

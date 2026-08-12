@@ -1,10 +1,19 @@
 import Portfolio from "../models/Portfolio.js";
+import { uploadToCloudinary } from "../utils/cloudinaryUpload.js"
 
 // @desc   Create a new portfolio project (admin only)
 // @route  POST /api/portfolio
 export const createPortfolio = async (req, res, next) => {
   try {
-    const { title, description, image, category } = req.body;
+    const { title, description, category } = req.body;
+
+    if (!req.file) {
+      const error = new Error("Image is required");
+      error.statusCode = 400;
+      throw error;
+    }
+
+    const image = await uploadToCloudinary(req.file.buffer, "qorzen/portfolio");
 
     const project = await Portfolio.create({ title, description, image, category });
 

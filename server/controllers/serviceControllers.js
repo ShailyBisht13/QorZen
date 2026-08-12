@@ -1,28 +1,37 @@
 import Service from "../models/Service.js";
+import { uploadToCloudinary } from "../utils/cloudinaryUpload.js";
 
 // @desc   Create a new service (admin only)
 // @route  POST /api/services
-export const createService = async (req, res, next) =>{
-    try {
-        const {title, description, image, features, priceStartingFrom} = req.body;
+export const createService = async (req, res, next) => {
+  try {
+    const { title, description, features, priceStartingFrom } = req.body;
 
-        const service = await Service.create({
-            title,
-            description,
-            image,
-            features,
-            priceStartingFrom,
-        })
-
-        res.status(201).json({
-            success: true,
-            message: "Service created successfully",
-            data: service,
-        })
-    } catch (error) {
-        next(error)
+    if (!req.file) {
+      const error = new Error("Image is required");
+      error.statusCode = 400;
+      throw error;
     }
-}
+
+    const image = await uploadToCloudinary(req.file.buffer, "qorzen/services");
+
+    const service = await Service.create({
+      title,
+      description,
+      image,
+      features,
+      priceStartingFrom,
+    });
+
+    res.status(201).json({
+      success: true,
+      message: "Service created successfully",
+      data: service,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
 
 // @desc   Get all active services (public)

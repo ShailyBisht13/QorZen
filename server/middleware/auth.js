@@ -42,3 +42,32 @@ export const authorize = (...roles)=>{
         next()
     }
 }
+
+// Like protect, but doesn't block the request if there's no token —
+// it just leaves req.user undefined for logged-out visitors.
+// Used on routes that behave differently for logged-in vs anonymous users,
+// like viewing a course preview.
+export const optionalAuth = async (req, res, next) => {
+  try {
+    let token;
+
+    if (req.headers.authorization?.startsWith("Bearer")) {
+      token = req.headers.authorization.split(" ")[1];
+    }
+
+    if (!token) {
+      return next(); // no token? that's fine, just continue as a guest
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.userId);
+
+    if (user) {
+      req.user = user;
+    }
+
+    next();
+  } catch (error) {
+    next(); // invalid token? treat as guest instead of blocking
+  }
+};

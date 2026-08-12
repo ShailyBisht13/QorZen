@@ -1,10 +1,19 @@
 import Blog from "../models/Blog.js";
+import { uploadToCloudinary } from "../utils/cloudinaryUpload.js";
 
 // @desc   Create a new blog post (admin only)
 // @route  POST /api/blogs
 export const createBlog = async (req, res, next) => {
   try {
-    const { title, content, image, category, tags } = req.body;
+    const { title, content, category, tags } = req.body;
+
+    if (!req.file) {
+      const error = new Error("Image is required");
+      error.statusCode = 400;
+      throw error;
+    }
+
+    const image = await uploadToCloudinary(req.file.buffer, "qorzen/blogs");
 
     const blog = await Blog.create({
       title,
@@ -12,7 +21,7 @@ export const createBlog = async (req, res, next) => {
       image,
       category,
       tags,
-      author: req.user._id, // taken from the logged-in admin, never from req.body
+      author: req.user._id,
     });
 
     res.status(201).json({
